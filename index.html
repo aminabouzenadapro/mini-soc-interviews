@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mini SOC Interviews</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar">
+    <h1>Mini SOC Interviews</h1>
+    <span class="spacer"></span>
+    <span class="chip" id="sync" data-mode="loading" hidden></span>
+    <div class="lang" role="group" aria-label="Language">
+      <button id="lang-fr" type="button">FR</button>
+      <button id="lang-en" type="button">EN</button>
+    </div>
+    <button class="btn" id="signout" type="button" hidden></button>
+  </div>
+  <nav class="tabs" role="tablist" id="tabs" hidden>
+    <button id="tab-contacts" role="tab" type="button"></button>
+    <button id="tab-interview" role="tab" type="button"></button>
+    <button id="tab-results" role="tab" type="button"></button>
+  </nav>
+</div></header>
+<main class="wrap" id="view"></main>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="questions.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
