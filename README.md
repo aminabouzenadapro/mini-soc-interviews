@@ -4,7 +4,7 @@ A web app for running market interviews for the Mini SOC as a Service project. I
 
 - **Front end:** plain HTML, CSS, and JavaScript, hosted on GitHub Pages
 - **Database and sign-in:** Supabase
-- **Database structure:** [`supabase/schema.sql`](supabase/schema.sql)
+- **Database structure:** run [`supabase/schema.sql`](supabase/schema.sql), then [`supabase/002_research_tools.sql`](supabase/002_research_tools.sql)
 
 Interview answers and contacts are stored in Supabase, not in this repository. Only signed-in people whose email is in the `team_members` table can read or change them.
 
