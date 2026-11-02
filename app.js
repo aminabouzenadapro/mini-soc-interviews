@@ -1,8 +1,22 @@
 const TARGETS = { A: 5, B: 3, C: 2, D: 2, E: 2, F: 1, G: 1 };
 const STATUSES = ["todo", "contacted", "scheduled", "done", "declined"];
 const H_STATUSES = ["untested", "supported", "mixed", "rejected"];
-const VIEWS = ["overview", "people", "interview", "results", "questions"];
+const VIEWS = ["overview", "people", "interview", "results", "check", "questions"];
+// Each test reads one question. "yes" lists the answers that support the idea;
+// "notIn" counts anyone who gave an answer outside that list.
+const CRITERIA = [
+  { id: "need", key: true, section: "A", q: "A4", yes: ["Very important", "Important"], target: 0.6, min: 3 },
+  { id: "pain", section: "A", q: "A5", notIn: ["None", "Prefer not to say"], target: 0.4, min: 3 },
+  { id: "interest", key: true, section: "A", q: "A8", yes: ["Very interested", "Somewhat interested"], target: 0.6, min: 3 },
+  { id: "pay", key: true, section: "A", q: "A10", yes: ["Less than 20,000 DA", "20,000–50,000 DA", "50,000–100,000 DA", "More than 100,000 DA"], target: 0.5, min: 3, h: "h-pay" },
+  { id: "logs", section: "B", q: "B7", yes: ["Yes", "Only if hosted in Algeria", "Only with strict conditions"], target: 0.6, min: 2, h: "h-logs" },
+  { id: "value", section: "B", q: "B9", yes: ["Fewer, clearer alerts", "Reports for management"], target: 0.4, min: 2, h: "h-value" },
+  { id: "partners", section: "C", q: "C8", yes: ["Yes", "Maybe"], target: 0.5, min: 2, h: "h-partners" },
+  { id: "experts", section: "E", q: "E6", yes: ["Yes", "Yes, if simple and cheap"], target: 0.5, min: 2 }
+];
+const CRITERION_HYPOTHESIS = { need: "h-priority" };
 const ICONS = {
+  check: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8 12.5l2.7 2.7L16 9.5",
   overview: "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-3H4zM14 7h6V4h-6z",
   people: "M16 11a4 4 0 1 0-8 0M4 20c1-4 4-6 8-6s7 2 8 6",
   interview: "M5 5h14v11H9l-4 4zM9 9h6M9 12h4",
@@ -81,7 +95,7 @@ function render() {
   const view = document.getElementById("view");
   if (app.mode === "loading") { view.innerHTML = `<p class="muted">${esc(t("loading"))}</p>`; return; }
   if (app.mode === "signedout") { view.innerHTML = loginHtml(); return; }
-  const html = { overview: overviewHtml, people: peopleHtml, interview: interviewHtml, results: resultsHtml, questions: questionsHtml, report: reportHtml }[app.view]();
+  const html = { overview: overviewHtml, people: peopleHtml, interview: interviewHtml, results: resultsHtml, check: checkHtml, questions: questionsHtml, report: reportHtml }[app.view]();
   view.innerHTML = banner() + html;
   if (app.view === "interview") updateProgress();
 }
@@ -151,6 +165,66 @@ function nextSteps() {
   return steps;
 }
 
+// ---------- Idea check ----------
+function scoreCriterion(cr) {
+  const given = interviewsOf(cr.section).map(r => answerOf(r, cr.q)).filter(a => a?.choices?.length);
+  const n = given.length;
+  const c = given.filter(a => cr.yes ? a.choices.some(x => cr.yes.includes(x)) : a.choices.some(x => !cr.notIn.includes(x))).length;
+  const rate = n ? c / n : 0;
+  const status = n < cr.min ? "unknown" : rate >= cr.target ? "pass" : rate >= cr.target - 0.15 ? "borderline" : "fail";
+  return { ...cr, n, c, rate, status, top: topChoice(cr.section, cr.q) };
+}
+function ideaVerdict(scores) {
+  const keys = scores.filter(s => s.key);
+  if (keys.some(s => s.status === "unknown")) return "early";
+  if (keys.some(s => s.status === "fail")) return "rethink";
+  if (scores.some(s => s.status === "fail" || s.status === "borderline")) return "adjust";
+  if (scores.some(s => s.status === "unknown")) return "promising";
+  return "go";
+}
+const SUGGESTED = { pass: "supported", borderline: "mixed", fail: "rejected" };
+function evidenceText(s) {
+  return `${t("interviewsWord")}: ${s.c} ${t("of")} ${s.n} (${t("goalWord").toLowerCase()} ${Math.round(s.target * 100)}%)`;
+}
+function checkRows(scores, printing) {
+  return scores.map(s => {
+    const c = t("criteria")[s.id];
+    const hId = s.h || CRITERION_HYPOTHESIS[s.id];
+    const h = app.hypotheses.find(x => x.id === hId);
+    const suggestion = SUGGESTED[s.status];
+    const canApply = !printing && h && suggestion && (h.status !== suggestion || h.evidence !== evidenceText(s));
+    const result = s.n ? `${s.c} ${t("of")} ${s.n}` : t("noAnswers");
+    return `<article class="criterion c-${s.status}">
+      <div class="criterion-head"><h3>${esc(c.name)}${s.key ? ` <span class="tag">${esc(t("keyTest"))}</span>` : ""}</h3>
+        <span class="pill k-${s.status}">${esc(t("checkStatus")[s.status])}</span></div>
+      <p class="muted small">${esc(c.measure)}</p>
+      <div class="criterion-figures">
+        <div><span class="muted small">${esc(t("resultWord"))}</span><strong class="mono">${esc(result)}</strong></div>
+        <div><span class="muted small">${esc(t("goalWord"))}</span><strong class="mono">${Math.round(s.target * 100)}% · ${esc(t("minWord")(s.min))}</strong></div>
+        ${s.top ? `<div><span class="muted small">${esc(t("mostCommon"))}</span><strong>${esc(s.top.label)}</strong></div>` : ""}
+      </div>
+      ${s.n ? `<div class="meter target" style="--goal:${s.target * 100}%"><div style="width:${s.rate * 100}%"></div></div>` : ""}
+      ${s.status === "fail" || s.status === "borderline" ? `<p class="advice"><strong>${esc(t("toChange"))}</strong> ${esc(c.advice)}</p>` : ""}
+      ${canApply ? `<button class="btn small" type="button" data-action="applyAssumption" data-id="${s.id}">${esc(t("applyAssumption")(t("hStatus")[suggestion]))}</button>` : ""}
+    </article>`;
+  }).join("");
+}
+function verdictHtml(scores) {
+  const v = ideaVerdict(scores);
+  const counts = ["pass", "borderline", "fail", "unknown"].map(k => `${scores.filter(s => s.status === k).length} ${t("checkStatus")[k].toLowerCase()}`).join(" · ");
+  return `<section class="verdict v-${v}"><p class="eyebrow">${esc(t("verdictLabel"))}</p>
+    <h2>${esc(t("verdicts")[v].title)}</h2><p>${esc(t("verdicts")[v].text)}</p><p class="small mono">${esc(counts)}</p></section>`;
+}
+function checkHtml() {
+  const scores = CRITERIA.map(scoreCriterion);
+  const steps = t("checkMethod").map(s => `<li>${esc(s)}</li>`).join("");
+  return pageHead(t("checkTitle"), t("checkIntro"), `<button class="btn" type="button" data-action="report">${esc(t("openReport"))}</button>`)
+    + verdictHtml(scores)
+    + `<div class="criteria">${checkRows(scores, false)}</div>
+      <section class="panel"><h2>${esc(t("checkHowTitle"))}</h2><ol class="steps">${steps}</ol>
+        <p class="muted small">${esc(t("checkEdited"))}</p></section>`;
+}
+
 // ---------- Overview ----------
 function assumptionsHtml(printing = false) {
   const items = [...app.hypotheses].sort((a, b) => a.position - b.position).map(h => {
@@ -175,8 +249,11 @@ function overviewHtml() {
       <button class="btn small" type="button" data-action="startInterview" data-section="${p.id}">${esc(t("start"))}</button></div>`;
   }).join("");
   const steps = nextSteps().map(s => `<li>${esc(s)}</li>`).join("");
+  const v = ideaVerdict(CRITERIA.map(scoreCriterion));
   return pageHead(t("overviewTitle"), t("overviewIntro"))
-    + `<div class="kpis">
+    + `<button class="verdict-strip v-${v}" type="button" data-action="go" data-view="check">
+        <span class="eyebrow">${esc(t("verdictLabel"))}</span><strong>${esc(t("verdicts")[v].title)}</strong><span class="small">${esc(t("seeCheck"))} →</span></button>
+      <div class="kpis">
         <div class="kpi"><strong>${done}<span>/${goal}</span></strong><span>${esc(t("done"))}</span></div>
         <div class="kpi"><strong>${toReach}</strong><span>${esc(t("contactsToReach"))}</span></div>
         <div class="kpi"><strong>${due}</strong><span>${esc(t("followUps"))}</span></div>
@@ -416,11 +493,14 @@ function reportHtml() {
     return `<h3>${esc(L(p.title))}</h3><ul>${lines}</ul>`;
   }).join("");
   const quotes = app.responses.map(r => r.key_quote).filter(Boolean).map(q => `<blockquote>${esc(q)}</blockquote>`).join("");
+  const scores = CRITERIA.map(scoreCriterion);
   return `<div class="page-head no-print"><button class="btn" type="button" data-action="go" data-view="results">${esc(t("back"))}</button>
       <button class="btn primary" type="button" data-action="print">${esc(t("print"))}</button></div>
     <article class="panel report">
       <h1>${esc(t("reportTitle"))}</h1>
       <p class="muted">Mini SOC as a Service · ${esc(t("reportDate"))} ${esc(date)}</p>
+      ${verdictHtml(scores)}
+      <h2>${esc(t("checkTitle"))}</h2><div class="criteria">${checkRows(scores, true)}</div>
       <h2>${esc(t("reportCounts"))}</h2><table><tbody>${counts}</tbody></table>
       <h2>${esc(t("signals"))}</h2><div class="signals">${signalsHtml()}</div>
       <h2>${esc(t("assumptions"))}</h2>${assumptionsHtml(true)}
@@ -570,6 +650,12 @@ const ACTIONS = {
     render();
   },
   report() { setView("report"); },
+  async applyAssumption(b) {
+    const s = scoreCriterion(CRITERIA.find(c => c.id === b.dataset.id));
+    const id = s.h || CRITERION_HYPOTHESIS[s.id];
+    await guarded(() => patchRow("hypotheses", id, { status: SUGGESTED[s.status], evidence: evidenceText(s) }));
+    toast(t("saved")); render();
+  },
   print() { window.print(); },
   exportCsv: downloadCsv,
   editQuestion(b) { questionDialog(b.dataset.id); },

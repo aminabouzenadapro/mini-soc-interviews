@@ -1,7 +1,39 @@
 // Interface text. Interview questions live in the database, not here.
 const UI = {
   en: {
-    nav: { overview: "Overview", people: "People to contact", interview: "New interview", results: "Results", questions: "Questions" },
+    nav: { overview: "Overview", people: "People to contact", interview: "New interview", results: "Results", check: "Idea check", questions: "Questions" },
+    checkTitle: "Idea check",
+    checkIntro: "Is the idea on the right track, or does it need to change? Each test below compares what people said with a goal you set before the interviews.",
+    verdictLabel: "Current verdict", seeCheck: "See the idea check",
+    verdicts: {
+      early: { title: "Too early to decide", text: "The three key tests need at least 3 SME owner interviews each. Keep interviewing before drawing conclusions." },
+      rethink: { title: "Rethink the idea", text: "At least one key test failed: SMEs don't show enough need, interest, or willingness to pay. Read the advice below and change the customer, the offer, or the price before building more." },
+      adjust: { title: "Adjust the idea", text: "The core idea holds, but some tests are weak or failing. Change the parts flagged below, then test them again." },
+      promising: { title: "Promising so far", text: "Every test with enough answers has passed. Finish the tests that are still waiting for answers to confirm it." },
+      go: { title: "Keep going", text: "Every test passed. The interviews support the idea as it is. Keep checking as more answers come in." }
+    },
+    checkStatus: { pass: "Passed", borderline: "Borderline", fail: "Failed", unknown: "Not enough answers" },
+    keyTest: "Key test", resultWord: "Result", goalWord: "Goal", mostCommon: "Most common answer", interviewsWord: "Interviews",
+    minWord: n => `at least ${n} answers`, toChange: "What to change:",
+    applyAssumption: s => `Mark the assumption as ${s}`,
+    checkHowTitle: "How to use this check",
+    checkMethod: [
+      "Agree on the goals with your supervisor before most interviews are done, so you don't move them to fit the results.",
+      "A test passes when enough people give an answer that supports the idea. Borderline means it is within 15 points of the goal.",
+      "Read the most useful sentences in Results too. The numbers tell you what people think; their words tell you why.",
+      "If you change the idea, write the new version as an assumption and test it with new interviews."
+    ],
+    checkEdited: "Each test reads one question by its answer choices. If you change those choices on the Questions page, that test may stop counting.",
+    criteria: {
+      need: { name: "SMEs see cybersecurity as important", measure: "SME owners who answer “Very important” or “Important” to A4.", advice: "Security isn't a priority for them. Target sectors that must protect sensitive data, such as health and finance, or companies whose clients demand proof of security." },
+      pain: { name: "SMEs have already had problems", measure: "SME owners who report at least one incident in A5.", advice: "Few have had incidents, so the risk feels distant. Lead with prevention and compliance, and use real examples from Algerian companies." },
+      interest: { name: "SMEs want the service", measure: "SME owners who are “Very” or “Somewhat interested” in A8.", advice: "The offer doesn't attract them yet. Ask what they would want instead, and test a simpler first offer, such as a one-time security check-up." },
+      pay: { name: "SMEs would pay for it", measure: "SME owners who choose a monthly price in A10, rather than “I would not pay”.", advice: "They won't pay this way yet. Test a lower starting price, an annual contract, a free pilot, or selling through IT providers." },
+      logs: { name: "IT managers accept sending logs out", measure: "IT managers who accept the agent in B7, with or without conditions.", advice: "Sending logs out is a blocker. Offer hosting in Algeria, collect less data, or install the platform at the client's site." },
+      value: { name: "Our differentiator matters", measure: "IT managers whose biggest need in B9 is clearer alerts or management reports.", advice: "Clear reports and alerts aren't what they value most. Rebuild the differentiator around the answer they chose most often." },
+      partners: { name: "IT providers would work with us", measure: "IT providers who would resell the service (“Yes” or “Maybe” in C8).", advice: "Providers see you as a competitor. Sell directly to SMEs, or offer providers a revenue share or a version under their own brand." },
+      experts: { name: "Experts think a SOC suits SMEs", measure: "Consultants who answer “Yes” or “Yes, if simple and cheap” in E6.", advice: "Experts doubt SMEs need a SOC yet. Start with the basics, such as backups, account security, and updates, and add monitoring on top." }
+    },
     signIn: "Sign in", signOut: "Sign out", signInIntro: "Only the project team can open this app.",
     email: "Email", password: "Password", loading: "Loading…",
     badLogin: "That email or password is wrong. Check them and try again.",
@@ -75,7 +107,39 @@ const UI = {
     openQuestion: "Written answer"
   },
   fr: {
-    nav: { overview: "Vue d'ensemble", people: "Personnes à contacter", interview: "Nouvel entretien", results: "Résultats", questions: "Questions" },
+    nav: { overview: "Vue d'ensemble", people: "Personnes à contacter", interview: "Nouvel entretien", results: "Résultats", check: "Bilan de l'idée", questions: "Questions" },
+    checkTitle: "Bilan de l'idée",
+    checkIntro: "L'idée est-elle sur la bonne voie, ou faut-il la modifier ? Chaque test compare les réponses avec un objectif fixé avant les entretiens.",
+    verdictLabel: "Verdict actuel", seeCheck: "Voir le bilan de l'idée",
+    verdicts: {
+      early: { title: "Trop tôt pour décider", text: "Les trois tests clés demandent au moins 3 entretiens avec des dirigeants de PME chacun. Continuez les entretiens avant de conclure." },
+      rethink: { title: "Repenser l'idée", text: "Au moins un test clé a échoué : les PME ne montrent pas assez de besoin, d'intérêt ou de volonté de payer. Lisez les conseils ci-dessous et changez le client, l'offre ou le prix avant d'aller plus loin." },
+      adjust: { title: "Ajuster l'idée", text: "Le cœur de l'idée tient, mais certains tests sont faibles ou échouent. Modifiez les points signalés ci-dessous, puis testez-les de nouveau." },
+      promising: { title: "Prometteur pour l'instant", text: "Tous les tests avec assez de réponses sont réussis. Terminez ceux qui attendent encore des réponses pour le confirmer." },
+      go: { title: "Continuer", text: "Tous les tests sont réussis. Les entretiens confirment l'idée telle qu'elle est. Continuez à vérifier à mesure que les réponses arrivent." }
+    },
+    checkStatus: { pass: "Réussi", borderline: "Limite", fail: "Échoué", unknown: "Pas assez de réponses" },
+    keyTest: "Test clé", resultWord: "Résultat", goalWord: "Objectif", mostCommon: "Réponse la plus fréquente", interviewsWord: "Entretiens",
+    minWord: n => `au moins ${n} réponses`, toChange: "À modifier :",
+    applyAssumption: s => `Marquer l'hypothèse comme ${s.toLowerCase()}`,
+    checkHowTitle: "Comment utiliser ce bilan",
+    checkMethod: [
+      "Validez les objectifs avec votre encadrant avant la plupart des entretiens, pour ne pas les ajuster aux résultats.",
+      "Un test est réussi quand assez de personnes donnent une réponse favorable à l'idée. « Limite » signifie à moins de 15 points de l'objectif.",
+      "Lisez aussi les phrases les plus utiles dans Résultats. Les chiffres disent ce que pensent les personnes ; leurs mots disent pourquoi.",
+      "Si vous modifiez l'idée, écrivez la nouvelle version comme hypothèse et testez-la avec de nouveaux entretiens."
+    ],
+    checkEdited: "Chaque test lit une question selon ses choix de réponse. Si vous modifiez ces choix dans la page Questions, le test peut ne plus compter.",
+    criteria: {
+      need: { name: "Les PME jugent la cybersécurité importante", measure: "Dirigeants de PME qui répondent « Très importante » ou « Importante » à A4.", advice: "La sécurité n'est pas leur priorité. Ciblez les secteurs qui doivent protéger des données sensibles, comme la santé et la finance, ou les entreprises dont les clients exigent des preuves de sécurité." },
+      pain: { name: "Les PME ont déjà eu des problèmes", measure: "Dirigeants de PME qui signalent au moins un incident à A5.", advice: "Peu ont subi des incidents, le risque leur paraît lointain. Misez sur la prévention et la conformité, avec de vrais exemples d'entreprises algériennes." },
+      interest: { name: "Les PME veulent le service", measure: "Dirigeants de PME « Très » ou « Assez intéressés » à A8.", advice: "L'offre ne les attire pas encore. Demandez ce qu'ils voudraient à la place et testez une première offre plus simple, comme un bilan de sécurité ponctuel." },
+      pay: { name: "Les PME paieraient", measure: "Dirigeants de PME qui choisissent un prix mensuel à A10, plutôt que « Je ne paierais pas ».", advice: "Ils ne paieraient pas sous cette forme. Testez un prix d'entrée plus bas, un contrat annuel, un pilote gratuit ou la vente via des prestataires informatiques." },
+      logs: { name: "Les responsables IT acceptent d'envoyer les journaux", measure: "Responsables IT qui acceptent l'agent à B7, avec ou sans conditions.", advice: "L'envoi des journaux bloque. Proposez un hébergement en Algérie, collectez moins de données ou installez la plateforme chez le client." },
+      value: { name: "Notre différenciation compte", measure: "Responsables IT dont le besoin principal à B9 est des alertes plus claires ou des rapports pour la direction.", advice: "Les rapports et alertes clairs ne sont pas leur priorité. Reconstruisez la différenciation autour de la réponse la plus choisie." },
+      partners: { name: "Les prestataires travailleraient avec nous", measure: "Prestataires qui revendraient le service (« Oui » ou « Peut-être » à C8).", advice: "Les prestataires vous voient comme un concurrent. Vendez directement aux PME, ou proposez-leur un partage de revenus ou une version à leur marque." },
+      experts: { name: "Les experts jugent un SOC adapté aux PME", measure: "Consultants qui répondent « Oui » ou « Oui, s'il est simple et peu coûteux » à E6.", advice: "Les experts doutent que les PME aient besoin d'un SOC. Commencez par les bases (sauvegardes, sécurité des comptes, mises à jour) et ajoutez la surveillance ensuite." }
+    },
     signIn: "Se connecter", signOut: "Se déconnecter", signInIntro: "Seule l'équipe du projet peut ouvrir cette application.",
     email: "E-mail", password: "Mot de passe", loading: "Chargement…",
     badLogin: "L'e-mail ou le mot de passe est incorrect. Vérifiez-les et réessayez.",
